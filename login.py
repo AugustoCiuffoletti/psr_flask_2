@@ -1,86 +1,53 @@
-from flask import Flask, Response, redirect, url_for, request, session, abort
-from flask.ext.login import LoginManager, UserMixin, \
-                                login_required, login_user, logout_user 
+from flask import Flask, Response
+from flask.ext.login import LoginManager, UserMixin, login_required
+
 
 app = Flask(__name__)
-
-# config
-app.config.update(
-    DEBUG = True,
-    SECRET_KEY = 'secret_xxx'
-)
-
-# flask-login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = "login"
 
 
-# silly user model
 class User(UserMixin):
+    # proxy for a database of users
+    user_database = {"JohnDoe": ("JohnDoe", "John"),
+               "JaneDoe": ("JaneDoe", "Jane")}
 
-    def __init__(self, id):
-        self.id = id
-        self.name = "user" + str(id)
-        self.password = self.name + "_secret"
-        
-    def __repr__(self):
-        return "%d/%s/%s" % (self.id, self.name, self.password)
+    def __init__(self, username, password):
+        self.id = username
+        self.password = password
+
+    @classmethod
+    def get(cls,id):
+        return cls.user_database.get(id)
 
 
-# create some users with ids 1 to 20       
-users = [User(id) for id in range(1, 21)]
+@login_manager.request_loader
+def load_user(request):
+    token = request.headers.get('Authorization')
+    if token is None:
+        token = request.args.get('token')
+
+    if token is not None:
+        username,password = token.split(":") # naive token
+        user_entry = User.get(username)
+        if (user_entry is not None):
+            user = User(user_entry[0],user_entry[1])
+            if (user.password == password):
+                return user
+    return None
 
 
-# some protected url
-@app.route('/')
+@app.route("/",methods=["GET"])
+def index():
+    return Response(response="Hello World!",status=200)
+
+
+@app.route("/protected/",methods=["GET"])
 @login_required
-def home():
-    return Response("Hello World!")
-
- 
-# somewhere to login
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']        
-        if password == username + "_secret":
-            id = username.split('user')[1]
-            user = User(id)
-            login_user(user)
-            return redirect(request.args.get("next"))
-        else:
-            return abort(401)
-    else:
-        return Response('''
-        <form action="" method="post">
-            <p><input type=text name=username>
-            <p><input type=password name=password>
-            <p><input type=submit value=Login>
-        </form>
-        ''')
+def protected():
+    return Response(response="Hello Protected World!", status=200)
 
 
-# somewhere to logout
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    return Response('<p>Logged out</p>')
-
-
-# handle login failed
-@app.errorhandler(401)
-def page_not_found(e):
-    return Response('<p>Login failed</p>')
-    
-    
-# callback to reload the user object        
-@login_manager.user_loader
-def load_user(userid):
-    return User(userid)
-    
-
-if __name__ == "__main__":
-    app.run()
+if __name__ == '__main__':
+    app.config["SECRET_KEY"] = "ITSASECRET"
+    app.run(port=5000,debug=True)
