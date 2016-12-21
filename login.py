@@ -1,10 +1,15 @@
+from flask import Flask,request
+app = Flask(__name__)
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
-    error = None
     if request.method == 'POST':
-        if request.form['username'] != 'admin' or request.form['password'] != 'admin':
-            error = 'Invalid Credentials. Please try again.'
-        else:
-            return redirect(url_for('home'))
-    return render_template('login.html', error=error)
+		return "Hallo "+request.form['username']+"!"
+    else:
+		return '''
+		<h2>Come ti chiami?</h2>
+			<form action="" method="post">
+				<input type="text" name="username">
+				<input type="submit" value="Invia">
+			</form>
+			'''
