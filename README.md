@@ -5,14 +5,7 @@ Queste istruzioni sono relative alla macchina "desktop" del laboratorio virtuale
 Per svolgere l'attività di laboratorio digitare, in una console della macchina virtuale, i seguenti comandi:
 
 ```
-#!bash
-
-$ cd
-$ . Flask/bin/activate
-$ git clone git@bitbucket.org:augusto_ciuffoletti/lab_flask_2.git
-$ cd lab_flask_2
-$ export FLASK_APP=login.py
-$ flask run --host=0.0.0.0
+$ make run
 ```
 
 Dal computer host, quello reale, aprite il browser e digitate la url:
