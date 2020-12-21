@@ -3,9 +3,9 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
+	if request.method == 'POST':
 		return "Hallo "+request.form['username']+"!"
-    else:
+	else:
 		return '''
 		<h2>Come ti chiami?</h2>
 			<form action="" method="post">
